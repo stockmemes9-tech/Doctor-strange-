@@ -7,197 +7,77 @@
 <style>
   :root {
     --void: #05040a;
-    --void-2: #0a0714;
     --ember: #ff8a3d;
     --ember-hot: #ffd23d;
     --mystic: #7c4dff;
-    --mystic-deep: #3a1f8f;
     --parchment: #e8dcc8;
   }
-
   * { box-sizing: border-box; }
-
   html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--void);
-    overflow: hidden;
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    background: var(--void); overflow: hidden;
     font-family: 'Georgia', 'Iowan Old Style', serif;
   }
-
-  #stage {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-  }
-
+  #stage { position: relative; width: 100vw; height: 100vh; }
   video {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transform: scaleX(-1);
-    filter: brightness(0.55) saturate(0.8) contrast(1.05);
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    object-fit: cover; transform: scaleX(-1);
+    filter: brightness(0.5) saturate(0.75) contrast(1.08);
   }
-
   canvas#fx {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%;
-    height: 100%;
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     transform: scaleX(-1);
   }
-
   .vignette {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(2,1,6,0.85) 100%);
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(2,1,6,0.88) 100%);
   }
-
   header {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    padding: 28px 32px 0;
-    z-index: 10;
-    pointer-events: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    position: absolute; top: 0; left: 0; right: 0; padding: 28px 32px 0;
+    z-index: 10; pointer-events: none; display: flex;
+    justify-content: space-between; align-items: flex-start;
   }
-
-  .brand {
-    color: var(--parchment);
-    letter-spacing: 0.04em;
-  }
-  .brand .mark {
-    font-size: 13px;
-    color: var(--ember);
-    opacity: 0.85;
-    margin-bottom: 2px;
-  }
-  .brand .name {
-    font-size: 22px;
-    font-weight: 400;
-  }
-
-  .status {
-    color: var(--parchment);
-    text-align: right;
-    font-size: 13px;
-    opacity: 0.75;
-    line-height: 1.6;
-  }
+  .brand { color: var(--parchment); letter-spacing: 0.04em; }
+  .brand .mark { font-size: 13px; color: var(--ember); opacity: 0.85; margin-bottom: 2px; }
+  .brand .name { font-size: 22px; font-weight: 400; }
+  .status { color: var(--parchment); text-align: right; font-size: 13px; opacity: 0.75; line-height: 1.6; }
   .status .dot {
-    display: inline-block;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #d64545;
-    margin-right: 6px;
-    vertical-align: middle;
-    transition: background 0.3s;
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: #d64545; margin-right: 6px; vertical-align: middle; transition: background 0.3s;
   }
-  .status.live .dot {
-    background: var(--ember-hot);
-    box-shadow: 0 0 8px var(--ember-hot);
-  }
-
+  .status.live .dot { background: var(--ember-hot); box-shadow: 0 0 8px var(--ember-hot); }
   #overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    text-align: center;
-    padding: 24px;
+    position: absolute; inset: 0; z-index: 20; display: flex; align-items: center;
+    justify-content: center; flex-direction: column; text-align: center; padding: 24px;
     background: radial-gradient(ellipse at center, rgba(20,10,35,0.55), rgba(3,2,8,0.92));
   }
-
-  #overlay h1 {
-    color: var(--parchment);
-    font-weight: 400;
-    font-size: clamp(28px, 5vw, 46px);
-    margin: 0 0 14px;
-    letter-spacing: 0.01em;
-  }
-
-  #overlay p {
-    color: var(--parchment);
-    opacity: 0.7;
-    font-size: 15px;
-    max-width: 440px;
-    line-height: 1.6;
-    margin: 0 0 28px;
-  }
-
+  #overlay h1 { color: var(--parchment); font-weight: 400; font-size: clamp(28px, 5vw, 46px); margin: 0 0 14px; }
+  #overlay p { color: var(--parchment); opacity: 0.7; font-size: 15px; max-width: 440px; line-height: 1.6; margin: 0 0 28px; }
   #startBtn {
-    font-family: inherit;
-    font-size: 16px;
-    padding: 14px 34px;
-    border-radius: 999px;
+    font-family: inherit; font-size: 16px; padding: 14px 34px; border-radius: 999px;
     border: 1px solid rgba(255,180,90,0.5);
     background: linear-gradient(135deg, rgba(124,77,255,0.25), rgba(255,138,61,0.25));
-    color: var(--ember-hot);
-    cursor: pointer;
-    letter-spacing: 0.03em;
+    color: var(--ember-hot); cursor: pointer; letter-spacing: 0.03em;
     transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
   }
-  #startBtn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 0 30px rgba(255,138,61,0.35);
-    border-color: rgba(255,210,61,0.8);
-  }
-  #startBtn:active { transform: translateY(0); }
-
-  #overlay .hint {
-    margin-top: 22px;
-    font-size: 12px;
-    color: var(--parchment);
-    opacity: 0.4;
-    max-width: 380px;
-  }
-
+  #startBtn:hover { transform: translateY(-1px); box-shadow: 0 0 30px rgba(255,138,61,0.35); border-color: rgba(255,210,61,0.8); }
+  #overlay .hint { margin-top: 22px; font-size: 12px; color: var(--parchment); opacity: 0.4; max-width: 380px; }
   #overlay.hidden { display: none; }
-
   footer {
-    position: absolute;
-    bottom: 18px;
-    left: 0; right: 0;
-    text-align: center;
-    z-index: 10;
-    color: var(--parchment);
-    opacity: 0.45;
-    font-size: 12px;
-    letter-spacing: 0.03em;
-    pointer-events: none;
+    position: absolute; bottom: 18px; left: 0; right: 0; text-align: center; z-index: 10;
+    color: var(--parchment); opacity: 0.45; font-size: 12px; letter-spacing: 0.03em; pointer-events: none;
   }
-
   .error-box {
-    color: #ffb3b3;
-    background: rgba(120,20,20,0.25);
-    border: 1px solid rgba(255,120,120,0.4);
-    padding: 12px 18px;
-    border-radius: 10px;
-    font-size: 13px;
-    max-width: 420px;
-    margin-top: 18px;
-    display: none;
+    color: #ffb3b3; background: rgba(120,20,20,0.25); border: 1px solid rgba(255,120,120,0.4);
+    padding: 12px 18px; border-radius: 10px; font-size: 13px; max-width: 420px; margin-top: 18px; display: none;
   }
 </style>
 </head>
 <body>
-
 <div id="stage">
   <video id="cam" playsinline autoplay muted></video>
   <canvas id="fx"></canvas>
   <div class="vignette"></div>
-
   <header>
     <div class="brand">
       <div class="mark">✦ THE SANCTUM</div>
@@ -205,12 +85,10 @@
     </div>
     <div class="status" id="status"><span class="dot"></span>awaiting camera</div>
   </header>
-
-  <footer>move your hand to weave the sparks · pinch to ignite · draw a circle in the air to cast</footer>
-
+  <footer>move your hand to weave the threads · pinch to ignite · draw a circle in the air to cast</footer>
   <div id="overlay">
     <h1>Conjure light with your hands</h1>
-    <p>Grant camera access and the sanctum will trace your fingertips, wreathing them in mystic sparks that trail as you move. Pinch to ignite a burst, or sweep your palm in a full circle to cast a glowing sigil.</p>
+    <p>Grant camera access and the sanctum will trace your fingertips, wreathing them in fine threads of ember light. Pinch to ignite a burst, or sweep your palm in a full circle to cast a glowing sigil.</p>
     <button id="startBtn">Open the Portal</button>
     <div class="error-box" id="errorBox"></div>
     <div class="hint">Video runs entirely in your browser. Nothing is recorded or sent anywhere.</div>
@@ -219,7 +97,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 <script>
-// Fallback loader in case the cdnjs mirror path differs from the official one
 (function ensureHands() {
   if (typeof Hands === 'undefined') {
     document.write('<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"><\/script>');
@@ -239,137 +116,126 @@ const errorBox = document.getElementById('errorBox');
 
 let W = 0, H = 0;
 function resize() {
-  W = window.innerWidth;
-  H = window.innerHeight;
-  canvas.width = W;
-  canvas.height = H;
+  W = window.innerWidth; H = window.innerHeight;
+  canvas.width = W; canvas.height = H;
 }
 window.addEventListener('resize', resize);
 resize();
 
-// ---------- Particle system ----------
-const particles = [];
-const MAX_PARTICLES = 900;
-
-// palette for the mystic sparks
-const palette = [
-  [255, 210, 61],   // hot gold
-  [255, 138, 61],   // ember orange
-  [124, 77, 255],   // mystic violet
-  [255, 255, 255],  // white hot core
-];
-
 function rand(a, b) { return a + Math.random() * (b - a); }
 function pick(arr) { return arr[(Math.random() * arr.length) | 0]; }
+function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+
+// ---------- Pre-baked ember sprites (avoids per-particle gradient cost) ----------
+function makeSprite(coreColor, midColor) {
+  const s = 96;
+  const off = document.createElement('canvas');
+  off.width = s; off.height = s;
+  const octx = off.getContext('2d');
+  const g = octx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s/2);
+  g.addColorStop(0, coreColor);
+  g.addColorStop(0.28, midColor);
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  octx.fillStyle = g;
+  octx.beginPath();
+  octx.arc(s/2, s/2, s/2, 0, Math.PI * 2);
+  octx.fill();
+  return off;
+}
+const emberSprite = makeSprite('rgba(255,247,222,1)', 'rgba(255,150,45,0.65)');
+const violetSprite = makeSprite('rgba(240,230,255,1)', 'rgba(140,90,255,0.55)');
+
+// ---------- Particle system (sprite-based, streak-oriented) ----------
+const particles = [];
+const MAX_PARTICLES = 380;
 
 function spawnParticle(x, y, vxBias, vyBias, energy) {
   if (particles.length > MAX_PARTICLES) particles.splice(0, particles.length - MAX_PARTICLES);
   const angle = rand(0, Math.PI * 2);
-  const speed = rand(0.3, 2.2) * energy;
-  const col = pick(palette);
+  const speed = rand(0.2, 1.6) * energy;
   particles.push({
     x, y,
-    vx: Math.cos(angle) * speed * 0.4 + vxBias * 0.15,
-    vy: Math.sin(angle) * speed * 0.4 + vyBias * 0.15 - rand(0.1, 0.6), // slight upward drift like embers
+    vx: Math.cos(angle) * speed * 0.35 + vxBias * 0.22,
+    vy: Math.sin(angle) * speed * 0.35 + vyBias * 0.22 - rand(0.05, 0.35),
     life: 1,
-    decay: rand(0.012, 0.03),
-    size: rand(1.2, 3.6) * energy,
-    color: col,
-    flicker: rand(0, Math.PI * 2),
+    decay: rand(0.018, 0.038),
+    size: rand(3.5, 8) * energy,
+    sprite: Math.random() < 0.12 ? violetSprite : emberSprite,
   });
 }
 
 function spawnBurst(x, y, count, energy) {
   for (let i = 0; i < count; i++) {
     const angle = rand(0, Math.PI * 2);
-    const speed = rand(1.5, 6) * energy;
-    const col = pick(palette);
+    const speed = rand(1.2, 5) * energy;
     particles.push({
       x, y,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
       life: 1,
-      decay: rand(0.02, 0.045),
-      size: rand(1.5, 4.5) * energy,
-      color: col,
-      flicker: rand(0, Math.PI * 2),
+      decay: rand(0.022, 0.045),
+      size: rand(4, 9) * energy,
+      sprite: Math.random() < 0.25 ? violetSprite : emberSprite,
     });
   }
 }
 
-function updateAndDrawParticles(dt) {
+function updateAndDrawParticles(dtScale) {
   ctx.globalCompositeOperation = 'lighter';
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vx *= 0.96;
-    p.vy *= 0.96;
-    p.vy -= 0.02; // gentle rise
-    p.life -= p.decay;
-    p.flicker += 0.3;
-    if (p.life <= 0) {
-      particles.splice(i, 1);
-      continue;
-    }
-    const flick = 0.7 + 0.3 * Math.sin(p.flicker);
-    const alpha = Math.max(0, p.life) * flick;
-    const [r, g, b] = p.color;
-    const size = p.size * (0.6 + p.life * 0.8);
+    p.x += p.vx * dtScale;
+    p.y += p.vy * dtScale;
+    p.vx *= 0.965;
+    p.vy *= 0.965;
+    p.vy -= 0.015 * dtScale;
+    p.life -= p.decay * dtScale;
+    if (p.life <= 0) { particles.splice(i, 1); continue; }
 
-    const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, size * 3);
-    grad.addColorStop(0, `rgba(${r},${g},${b},${alpha})`);
-    grad.addColorStop(0.4, `rgba(${r},${g},${b},${alpha * 0.35})`);
-    grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+    const speed = Math.hypot(p.vx, p.vy);
+    const stretch = 1 + Math.min(2.4, speed * 0.35);
+    const angle = Math.atan2(p.vy, p.vx);
+    const alpha = Math.max(0, p.life);
+    const size = p.size * (0.55 + p.life * 0.6);
 
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, size * 3, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = `rgba(255,255,255,${alpha * 0.9})`;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, Math.max(0.4, size * 0.35), 0, Math.PI * 2);
-    ctx.fill();
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(angle);
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(p.sprite, -size * stretch, -size, size * stretch * 2, size * 2);
+    ctx.restore();
   }
+  ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'source-over';
 }
 
-// ---------- Sigil rune ring (ornate mystic glyph) ----------
+// ---------- Sigil (ornate mystic glyph) ----------
 function drawSigil(x, y, radius, rotation, alpha, opts) {
   opts = opts || {};
-  const boost = opts.boost || 1;      // >1 for the big cast flash
-  const colorMix = opts.color || [255, 180, 90];
-  const [cr, cg, cb] = colorMix;
+  const boost = opts.boost || 1;
+  const [cr, cg, cb] = opts.color || [255, 170, 80];
 
   ctx.save();
   ctx.translate(x, y);
   ctx.globalCompositeOperation = 'lighter';
 
-  // soft glow backing
-  const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, radius * 1.3);
-  glow.addColorStop(0, `rgba(${cr},${cg},${cb},${alpha * 0.28 * boost})`);
+  const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, radius * 1.25);
+  glow.addColorStop(0, `rgba(${cr},${cg},${cb},${alpha * 0.22 * boost})`);
   glow.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
   ctx.fillStyle = glow;
-  ctx.beginPath();
-  ctx.arc(0, 0, radius * 1.3, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.beginPath(); ctx.arc(0, 0, radius * 1.25, 0, Math.PI * 2); ctx.fill();
 
   ctx.strokeStyle = `rgba(${cr},${cg},${cb},${alpha})`;
-  ctx.lineWidth = 1.3;
+  ctx.lineWidth = 1.1;
 
-  // outermost thin ring
   ctx.save();
   ctx.rotate(rotation * -0.6);
-  ctx.beginPath();
-  ctx.arc(0, 0, radius, 0, Math.PI * 2);
-  ctx.stroke();
-  // fine outer tick marks (like a dial)
-  const dial = 48;
+  ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.stroke();
+  const dial = 36;
   for (let i = 0; i < dial; i++) {
     const a = (i / dial) * Math.PI * 2;
     const r1 = radius * 0.97;
-    const r2 = (i % 4 === 0) ? radius * 1.06 : radius * 1.02;
+    const r2 = (i % 4 === 0) ? radius * 1.05 : radius * 1.01;
     ctx.beginPath();
     ctx.moveTo(Math.cos(a) * r1, Math.sin(a) * r1);
     ctx.lineTo(Math.cos(a) * r2, Math.sin(a) * r2);
@@ -377,79 +243,45 @@ function drawSigil(x, y, radius, rotation, alpha, opts) {
   }
   ctx.restore();
 
-  // second ring, counter-rotating, with arc segments (broken ring look)
   ctx.save();
   ctx.rotate(rotation * 1.4);
-  const segR = radius * 0.86;
-  const segCount = 10;
+  const segR = radius * 0.85;
+  const segCount = 9;
   for (let i = 0; i < segCount; i++) {
     const a0 = (i / segCount) * Math.PI * 2;
     const a1 = a0 + (Math.PI * 2 / segCount) * 0.6;
-    ctx.beginPath();
-    ctx.arc(0, 0, segR, a0, a1);
-    ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, segR, a0, a1); ctx.stroke();
   }
   ctx.restore();
 
-  // third ring, plain, rotation-linked
   ctx.save();
   ctx.rotate(rotation * -1.1);
-  ctx.beginPath();
-  ctx.arc(0, 0, radius * 0.7, 0, Math.PI * 2);
-  ctx.stroke();
-  // small diamond marks around it
-  const marks = 12;
-  for (let i = 0; i < marks; i++) {
-    const a = (i / marks) * Math.PI * 2;
-    const mx = Math.cos(a) * radius * 0.7;
-    const my = Math.sin(a) * radius * 0.7;
-    ctx.save();
-    ctx.translate(mx, my);
-    ctx.rotate(a);
-    ctx.beginPath();
-    ctx.moveTo(-3, 0); ctx.lineTo(0, -5); ctx.lineTo(3, 0); ctx.lineTo(0, 5);
-    ctx.closePath();
-    ctx.stroke();
-    ctx.restore();
-  }
+  ctx.beginPath(); ctx.arc(0, 0, radius * 0.68, 0, Math.PI * 2); ctx.stroke();
   ctx.restore();
 
-  // inner geometric star (8-point, rotation-linked)
   ctx.save();
   ctx.rotate(rotation * 0.8);
   ctx.beginPath();
-  const points = 8;
-  const rOuter = radius * 0.52;
-  const rInner = radius * 0.24;
+  const points = 8, rOuter = radius * 0.5, rInner = radius * 0.23;
   for (let i = 0; i <= points * 2; i++) {
     const a = (i / (points * 2)) * Math.PI * 2;
     const r = i % 2 === 0 ? rOuter : rInner;
-    const px = Math.cos(a) * r;
-    const py = Math.sin(a) * r;
-    if (i === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
+    const px = Math.cos(a) * r, py = Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
   }
-  ctx.closePath();
-  ctx.stroke();
+  ctx.closePath(); ctx.stroke();
   ctx.restore();
 
-  // innermost small core ring
-  ctx.beginPath();
-  ctx.arc(0, 0, radius * 0.14, 0, Math.PI * 2);
-  ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, 0, radius * 0.13, 0, Math.PI * 2); ctx.stroke();
 
   ctx.restore();
   ctx.globalCompositeOperation = 'source-over';
 }
 
-// ---------- Circle-cast gesture detection ----------
-// Tracks recent palm positions per hand; if they sweep around a center point
-// covering most of a full turn within a time+size window, trigger a big flash.
-const castTrails = {}; // handIndex -> array of {x,y,t}
-const flashes = []; // active big-flash sigils: {x,y,startT,duration,radius,color}
-const CAST_WINDOW_MS = 1400;
-const CAST_MIN_RADIUS_FACTOR = 1.2; // relative to handSpan
-const CAST_COOLDOWN_MS = 2200;
+// ---------- Circle-cast gesture ----------
+const castTrails = {};
+const flashes = [];
+const CAST_WINDOW_MS = 1400, CAST_COOLDOWN_MS = 2200;
 const lastCastTime = {};
 
 function trackCastGesture(handIndex, x, y, handSpan) {
@@ -457,54 +289,40 @@ function trackCastGesture(handIndex, x, y, handSpan) {
   if (!castTrails[handIndex]) castTrails[handIndex] = [];
   const trail = castTrails[handIndex];
   trail.push({ x, y, t: now });
-  // drop stale points
   while (trail.length && now - trail[0].t > CAST_WINDOW_MS) trail.shift();
-
   if (trail.length < 8) return;
   if (lastCastTime[handIndex] && now - lastCastTime[handIndex] < CAST_COOLDOWN_MS) return;
 
-  // Compute centroid of trail
   let cx = 0, cy = 0;
   for (const p of trail) { cx += p.x; cy += p.y; }
   cx /= trail.length; cy /= trail.length;
 
-  // Compute average radius from centroid — must be reasonably large (not a tiny jitter)
   let avgR = 0;
   for (const p of trail) avgR += Math.hypot(p.x - cx, p.y - cy);
   avgR /= trail.length;
-  if (avgR < handSpan * CAST_MIN_RADIUS_FACTOR * 0.5) return;
+  if (avgR < handSpan * 0.6) return;
 
-  // Compute total signed angular sweep around centroid
   let totalAngle = 0;
   let prevAngle = Math.atan2(trail[0].y - cy, trail[0].x - cx);
   for (let i = 1; i < trail.length; i++) {
     const a = Math.atan2(trail[i].y - cy, trail[i].x - cx);
     let da = a - prevAngle;
-    // normalize to [-PI, PI]
     while (da > Math.PI) da -= Math.PI * 2;
     while (da < -Math.PI) da += Math.PI * 2;
     totalAngle += da;
     prevAngle = a;
   }
 
-  // A full circle (either direction) covering roughly 300+ degrees triggers the cast
   if (Math.abs(totalAngle) > (Math.PI * 2) * 0.82) {
     lastCastTime[handIndex] = now;
-    triggerCastFlash(cx, cy, avgR);
-    trail.length = 0; // reset so it doesn't re-trigger immediately
+    flashes.push({
+      x: cx, y: cy, startT: now, duration: 900,
+      radius: Math.max(90, avgR * 1.6),
+      color: pick([[255, 170, 80], [124, 77, 255], [255, 210, 61]]),
+    });
+    spawnBurst(cx, cy, 70, 2);
+    trail.length = 0;
   }
-}
-
-function triggerCastFlash(x, y, radius) {
-  flashes.push({
-    x, y,
-    startT: performance.now(),
-    duration: 900,
-    radius: Math.max(90, radius * 1.6),
-    color: pick([[255, 170, 80], [124, 77, 255], [255, 210, 61]]),
-  });
-  // a ring of sparks bursting outward to sell the "cast" moment
-  spawnBurst(x, y, 90, 2.2);
 }
 
 function updateAndDrawFlashes() {
@@ -513,22 +331,15 @@ function updateAndDrawFlashes() {
     const f = flashes[i];
     const t = (now - f.startT) / f.duration;
     if (t >= 1) { flashes.splice(i, 1); continue; }
-
-    // ease-out scale, ease-in fade
     const scale = 0.4 + 0.9 * (1 - Math.pow(1 - t, 3));
     const alpha = t < 0.15 ? (t / 0.15) : (1 - (t - 0.15) / 0.85);
-
-    drawSigil(f.x, f.y, f.radius * scale, t * Math.PI * 2.4, Math.max(0, alpha) * 0.9, {
-      boost: 2.2,
-      color: f.color,
-    });
+    drawSigil(f.x, f.y, f.radius * scale, t * Math.PI * 2.4, Math.max(0, alpha) * 0.9, { boost: 2.2, color: f.color });
   }
 }
 
-// ---------- Hand tracking ----------
-const FINGER_TIPS = [4, 8, 12, 16, 20]; // thumb, index, middle, ring, pinky
-let lastPositions = {}; // per hand index -> per tip -> {x,y}
-let sigilState = {}; // per hand -> {rotation, active}
+// ---------- Hand tracking (inference) decoupled from rendering ----------
+const FINGER_TIPS = [4, 8, 12, 16, 20];
+const handsState = {}; // handIndex -> { target:[{x,y}], smoothed:[{x,y}], lastSeen, rotation, pinchActive }
 let statusLive = false;
 
 function setStatus(text, live) {
@@ -536,88 +347,103 @@ function setStatus(text, live) {
   statusEl.classList.toggle('live', !!live);
 }
 
-function dist(a, b) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
+let frameSkip = 0;
+function onResults(results) {
+  const now = performance.now();
+  const seen = new Set();
+  if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+    results.multiHandLandmarks.forEach((landmarks, handIndex) => {
+      seen.add(handIndex);
+      const targetPx = landmarks.map(lm => ({ x: lm.x * W, y: lm.y * H }));
+      if (!handsState[handIndex]) {
+        handsState[handIndex] = {
+          target: targetPx,
+          smoothed: targetPx.map(p => ({ x: p.x, y: p.y })),
+          lastSeen: now, rotation: 0, pinchActive: false,
+        };
+      } else {
+        handsState[handIndex].target = targetPx;
+        handsState[handIndex].lastSeen = now;
+      }
+    });
+  }
+  if (!statusLive && seen.size > 0) { setStatus('tracking hand', true); statusLive = true; }
 }
 
-function onResults(results) {
+// ---------- Render loop (runs at display refresh rate, independent of inference rate) ----------
+let lastFrameTime = performance.now();
+function renderLoop() {
+  const now = performance.now();
+  const dt = Math.min(48, now - lastFrameTime);
+  lastFrameTime = now;
+  const dtScale = dt / 16.67;
+
   ctx.clearRect(0, 0, W, H);
 
-  if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
-    if (statusLive) setStatus('hand not detected', false);
-    // still let existing particles and flashes fade out
-    updateAndDrawParticles();
-    updateAndDrawFlashes();
-    return;
-  }
+  let anyActive = false;
+  for (const key of Object.keys(handsState)) {
+    const hs = handsState[key];
+    if (now - hs.lastSeen > 450) { delete handsState[key]; continue; }
+    anyActive = true;
 
-  if (!statusLive) {
-    setStatus('tracking hand', true);
-    statusLive = true;
-  } else {
-    setStatus('tracking hand', true);
-  }
+    const smoothAlpha = 1 - Math.pow(0.001, dt / 1000) * 0; // placeholder, real alpha below
+    const alpha = Math.min(1, dtScale * 0.35);
+    for (let i = 0; i < hs.target.length; i++) {
+      hs.smoothed[i].x += (hs.target[i].x - hs.smoothed[i].x) * alpha;
+      hs.smoothed[i].y += (hs.target[i].y - hs.smoothed[i].y) * alpha;
+    }
 
-  results.multiHandLandmarks.forEach((landmarks, handIndex) => {
-    if (!lastPositions[handIndex]) lastPositions[handIndex] = {};
-    if (!sigilState[handIndex]) sigilState[handIndex] = { rotation: 0, pinchActive: false };
+    const lm = hs.smoothed;
+    const wrist = lm[0], midBase = lm[9];
+    const palmX = (wrist.x + midBase.x) / 2;
+    const palmY = (wrist.y + midBase.y) / 2;
+    const handSpan = dist(wrist, midBase);
 
-    // Palm center approx = average of wrist(0) and middle finger base(9)
-    const wrist = landmarks[0];
-    const midBase = landmarks[9];
-    const palmX = (wrist.x + midBase.x) / 2 * W;
-    const palmY = (wrist.y + midBase.y) / 2 * H;
+    hs.rotation += 0.012 * dtScale;
+    drawSigil(palmX, palmY, Math.max(50, handSpan * 1.6), hs.rotation, 0.24, { color: [255, 170, 80] });
 
-    // Draw rotating sigil at palm
-    sigilState[handIndex].rotation += 0.01;
-    const handSpan = dist(landmarks[0], landmarks[9]) * W;
-    drawSigil(palmX, palmY, Math.max(50, handSpan * 1.6), sigilState[handIndex].rotation, 0.24, { color: [255, 170, 80] });
+    trackCastGesture(key, palmX, palmY, handSpan);
 
-    // Track palm path for circle-cast gesture detection
-    trackCastGesture(handIndex, palmX, palmY, handSpan);
-
-    // Spawn sparks from every fingertip, trailing based on velocity
+    if (!hs.lastTip) hs.lastTip = {};
     FINGER_TIPS.forEach((tipIdx) => {
-      const lm = landmarks[tipIdx];
-      const x = lm.x * W;
-      const y = lm.y * H;
-      const prev = lastPositions[handIndex][tipIdx] || { x, y };
-      const vx = x - prev.x;
-      const vy = y - prev.y;
+      const p = lm[tipIdx];
+      const prev = hs.lastTip[tipIdx] || { x: p.x, y: p.y };
+      const vx = p.x - prev.x, vy = p.y - prev.y;
       const speed = Math.hypot(vx, vy);
-      lastPositions[handIndex][tipIdx] = { x, y };
+      hs.lastTip[tipIdx] = { x: p.x, y: p.y };
 
-      const energy = tipIdx === 4 || tipIdx === 8 ? 1.3 : 1.0; // thumb+index a bit brighter
-      const count = Math.min(6, 1 + Math.floor(speed * 0.5));
-      for (let i = 0; i < count; i++) {
-        spawnParticle(x, y, vx, vy, energy);
-      }
-      // idle shimmer even without movement
-      if (Math.random() < 0.4) spawnParticle(x, y, 0, 0, energy * 0.6);
+      const energy = (tipIdx === 4 || tipIdx === 8) ? 1.2 : 0.95;
+      const count = Math.min(3, Math.floor(speed * 0.6));
+      for (let i = 0; i < count; i++) spawnParticle(p.x, p.y, vx, vy, energy);
+      if (Math.random() < 0.22) spawnParticle(p.x, p.y, 0, 0, energy * 0.5);
     });
 
-    // Pinch detection: thumb tip (4) & index tip (8)
-    const thumb = landmarks[4];
-    const index = landmarks[8];
-    const pinchDist = dist(thumb, index) * W;
-    const isPinching = pinchDist < Math.max(22, handSpan * 0.22);
-
-    if (isPinching && !sigilState[handIndex].pinchActive) {
-      const bx = (thumb.x + index.x) / 2 * W;
-      const by = (thumb.y + index.y) / 2 * H;
-      spawnBurst(bx, by, 60, 1.8);
-      sigilState[handIndex].pinchActive = true;
+    const thumb = lm[4], index = lm[8];
+    const pinchDist = dist(thumb, index);
+    const isPinching = pinchDist < Math.max(20, handSpan * 0.22);
+    if (isPinching && !hs.pinchActive) {
+      spawnBurst((thumb.x + index.x) / 2, (thumb.y + index.y) / 2, 50, 1.7);
+      hs.pinchActive = true;
     } else if (!isPinching) {
-      sigilState[handIndex].pinchActive = false;
+      hs.pinchActive = false;
     }
-  });
+  }
 
-  updateAndDrawParticles();
+  if (!anyActive && statusLive === true) {
+    // keep last "tracking" label steady briefly, then mark lost
+  }
+  if (!anyActive) setStatus('hand not detected', false);
+
+  updateAndDrawParticles(dtScale);
   updateAndDrawFlashes();
-}
 
-// ---------- Startup flow ----------
+  requestAnimationFrame(renderLoop);
+}
+requestAnimationFrame(renderLoop);
+
+// ---------- Startup ----------
 let camera = null;
+let sendBusy = false;
 
 async function startExperience() {
   startBtn.disabled = true;
@@ -629,19 +455,17 @@ async function startExperience() {
       throw new Error('Hand-tracking library failed to load. Check your connection and try again.');
     }
 
-    const hands = new Hands({
-      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
-    });
+    const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
     hands.setOptions({
       maxNumHands: 2,
-      modelComplexity: 1,
-      minDetectionConfidence: 0.6,
+      modelComplexity: 0,        // lite model — much faster on mobile
+      minDetectionConfidence: 0.55,
       minTrackingConfidence: 0.5,
     });
     hands.onResults(onResults);
 
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+      video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
       audio: false,
     });
     videoEl.srcObject = stream;
@@ -649,10 +473,13 @@ async function startExperience() {
 
     camera = new Camera(videoEl, {
       onFrame: async () => {
+        if (sendBusy) return;      // skip a frame if inference is still busy — avoids queueing/lag buildup
+        sendBusy = true;
         await hands.send({ image: videoEl });
+        sendBusy = false;
       },
-      width: 1280,
-      height: 720,
+      width: 640,
+      height: 480,
     });
     camera.start();
 
@@ -675,12 +502,6 @@ async function startExperience() {
 }
 
 startBtn.addEventListener('click', startExperience);
-
-// Idle ambient shimmer loop even before hands are detected, so the canvas isn't dead
-function ambientLoop() {
-  updateAndDrawParticles();
-  requestAnimationFrame(ambientLoop);
-}
 </script>
 </body>
 </html>
