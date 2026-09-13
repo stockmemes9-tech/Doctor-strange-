@@ -18,15 +18,16 @@
     background: var(--void); overflow: hidden;
     font-family: 'Georgia', 'Iowan Old Style', serif;
   }
-  #stage { position: relative; width: 100vw; height: 100vh; }
+  #stage { position: relative; width: 100vw; height: 100vh; isolation: isolate; }
   video {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     object-fit: cover; transform: scaleX(-1);
-    filter: brightness(0.5) saturate(0.75) contrast(1.08);
+    filter: brightness(0.62) saturate(0.8) contrast(1.05);
   }
   canvas#fx {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     transform: scaleX(-1);
+    mix-blend-mode: screen;
   }
   .vignette {
     position: absolute; inset: 0; pointer-events: none;
@@ -399,6 +400,7 @@ function onResults(results) {
           smoothed: targetPx.map(p => ({ x: p.x, y: p.y })),
           lastSeen: now, rotation: 0, pinchActive: false,
           extState: 'neutral', fistEnteredAt: 0, openHoldStart: null, lastPulseAt: 0,
+          activity: 0.15,
         };
       } else {
         handsState[handIndex].target = targetPx;
@@ -436,6 +438,7 @@ function updateHandGestureState(hs, lm, wrist, palmX, palmY, handSpan) {
     if (hs.extState === 'fist' && hs.fistEnteredAt && (now - hs.fistEnteredAt) < 750) {
       spawnShockwave(palmX, palmY, Math.max(70, handSpan * 1.4), 500, [255, 200, 110], 4);
       spawnBurst(palmX, palmY, 55, 1.8);
+      hs.activity = 1.4;
       // extra sparks streaking outward along each finger direction
       for (const [tip] of FINGER_TIP_MCP_PAIRS) {
         const p = lm[tip];
@@ -503,6 +506,22 @@ function triggerClapExplosion(x, y) {
   spawnBurst(x, y, 70, 2.0);
 }
 
+// ---------- Ambient light glow (makes the hand feel like a real light source) ----------
+function drawAmbientGlow(x, y, radius, intensity) {
+  if (intensity <= 0.01) return;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const g = ctx.createRadialGradient(x, y, 0, x, y, radius);
+  g.addColorStop(0, `rgba(255,200,130,${0.32 * intensity})`);
+  g.addColorStop(0.5, `rgba(255,150,70,${0.14 * intensity})`);
+  g.addColorStop(1, 'rgba(255,120,50,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 // ---------- Render loop (runs at display refresh rate, independent of inference rate) ----------
 let lastFrameTime = performance.now();
 function renderLoop() {
@@ -540,6 +559,10 @@ function renderLoop() {
     const palmY = (wrist.y + midBase.y) / 2;
     const handSpan = dist(wrist, midBase);
 
+    // decay activity each frame, and draw the ambient light glow before the sigil
+    hs.activity = Math.max(0.15, hs.activity - 0.01 * dtScale);
+    drawAmbientGlow(palmX, palmY, Math.max(120, handSpan * 3.2), Math.min(1.4, hs.activity));
+
     hs.rotation += 0.012 * dtScale;
     drawSigil(palmX, palmY, Math.max(50, handSpan * 1.6), hs.rotation, 0.24, { color: [255, 170, 80] });
 
@@ -558,6 +581,7 @@ function renderLoop() {
       const count = Math.min(3, Math.floor(speed * 0.6));
       for (let i = 0; i < count; i++) spawnParticle(p.x, p.y, vx, vy, energy);
       if (Math.random() < 0.22) spawnParticle(p.x, p.y, 0, 0, energy * 0.5);
+      if (count > 0) hs.activity = Math.min(1.4, hs.activity + count * 0.05);
     });
 
     const thumb = lm[4], index = lm[8];
@@ -566,6 +590,7 @@ function renderLoop() {
     if (isPinching && !hs.pinchActive) {
       spawnBurst((thumb.x + index.x) / 2, (thumb.y + index.y) / 2, 50, 1.7);
       hs.pinchActive = true;
+      hs.activity = 1.2;
     } else if (!isPinching) {
       hs.pinchActive = false;
     }
