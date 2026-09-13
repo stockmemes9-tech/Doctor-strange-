@@ -85,10 +85,10 @@
     </div>
     <div class="status" id="status"><span class="dot"></span>awaiting camera</div>
   </header>
-  <footer>move your hand to weave the threads · pinch to ignite · draw a circle in the air to cast</footer>
+  <footer>pinch to ignite · circle to cast · hold palm open for a shield · snap a fist open for a blast · clap for an explosion</footer>
   <div id="overlay">
     <h1>Conjure light with your hands</h1>
-    <p>Grant camera access and the sanctum will trace your fingertips, wreathing them in fine threads of ember light. Pinch to ignite a burst, or sweep your palm in a full circle to cast a glowing sigil.</p>
+    <p>Grant camera access and the sanctum will trace your fingertips, wreathing them in ember threads. Five gestures work here: <b>pinch</b> to ignite, <b>trace a circle</b> to cast a sigil, <b>hold your palm open</b> to pulse a shield, <b>snap a fist open</b> to release a blast, and <b>clap both hands</b> for a full explosion.</p>
     <button id="startBtn">Open the Portal</button>
     <div class="error-box" id="errorBox"></div>
     <div class="hint">Video runs entirely in your browser. Nothing is recorded or sent anywhere.</div>
@@ -337,6 +337,44 @@ function updateAndDrawFlashes() {
   }
 }
 
+// ---------- Shockwave rings (shield pulse, release blast, clap explosion) ----------
+const shockwaves = [];
+function spawnShockwave(x, y, maxRadius, duration, color, lineWidth) {
+  shockwaves.push({ x, y, startT: performance.now(), duration, maxRadius, color: color || [255, 190, 100], lineWidth: lineWidth || 3 });
+}
+function updateAndDrawShockwaves() {
+  const now = performance.now();
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = shockwaves.length - 1; i >= 0; i--) {
+    const s = shockwaves[i];
+    const t = (now - s.startT) / s.duration;
+    if (t >= 1) { shockwaves.splice(i, 1); continue; }
+    const ease = 1 - Math.pow(1 - t, 2.2);
+    const r = s.maxRadius * ease;
+    const alpha = (1 - t) * 0.85;
+    const [cr, cg, cb] = s.color;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(${cr},${cg},${cb},${alpha})`;
+    ctx.lineWidth = s.lineWidth * (1 - t * 0.6);
+    ctx.stroke();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+// screen-wide impact feedback for big moments (clap explosion)
+let shakeIntensity = 0;
+let flashOpacity = 0;
+function updateScreenImpact(dtScale) {
+  shakeIntensity = Math.max(0, shakeIntensity - 0.9 * dtScale);
+  flashOpacity = Math.max(0, flashOpacity - 0.06 * dtScale);
+}
+function drawImpactFlash() {
+  if (flashOpacity <= 0) return;
+  ctx.fillStyle = `rgba(255,225,180,${flashOpacity * 0.5})`;
+  ctx.fillRect(0, 0, W, H);
+}
+
 // ---------- Hand tracking (inference) decoupled from rendering ----------
 const FINGER_TIPS = [4, 8, 12, 16, 20];
 const handsState = {}; // handIndex -> { target:[{x,y}], smoothed:[{x,y}], lastSeen, rotation, pinchActive }
@@ -360,6 +398,7 @@ function onResults(results) {
           target: targetPx,
           smoothed: targetPx.map(p => ({ x: p.x, y: p.y })),
           lastSeen: now, rotation: 0, pinchActive: false,
+          extState: 'neutral', fistEnteredAt: 0, openHoldStart: null, lastPulseAt: 0,
         };
       } else {
         handsState[handIndex].target = targetPx;
@@ -368,6 +407,100 @@ function onResults(results) {
     });
   }
   if (!statusLive && seen.size > 0) { setStatus('tracking hand', true); statusLive = true; }
+}
+
+// ---------- Gesture: finger-extension ratio (fist vs open palm), with hysteresis ----------
+const FINGER_TIP_MCP_PAIRS = [[8, 5], [12, 9], [16, 13], [20, 17]];
+function fingerExtensionRatio(lm, wrist) {
+  let total = 0;
+  for (const [tip, mcp] of FINGER_TIP_MCP_PAIRS) {
+    const tipD = dist(wrist, lm[tip]);
+    const mcpD = dist(wrist, lm[mcp]);
+    total += tipD / Math.max(1, mcpD);
+  }
+  return total / FINGER_TIP_MCP_PAIRS.length;
+}
+
+const OPEN_PALM_PULSE_MS = 550;
+
+function updateHandGestureState(hs, lm, wrist, palmX, palmY, handSpan) {
+  const now = performance.now();
+  const ratio = fingerExtensionRatio(lm, wrist);
+
+  if (hs.extState !== 'fist' && ratio < 1.22) {
+    hs.extState = 'fist';
+    hs.fistEnteredAt = now;
+    hs.openHoldStart = null;
+  } else if (hs.extState !== 'open' && ratio > 1.85) {
+    // just became open — check if it was a quick fist->open snap (release blast)
+    if (hs.extState === 'fist' && hs.fistEnteredAt && (now - hs.fistEnteredAt) < 750) {
+      spawnShockwave(palmX, palmY, Math.max(70, handSpan * 1.4), 500, [255, 200, 110], 4);
+      spawnBurst(palmX, palmY, 55, 1.8);
+      // extra sparks streaking outward along each finger direction
+      for (const [tip] of FINGER_TIP_MCP_PAIRS) {
+        const p = lm[tip];
+        const vx = (p.x - palmX) * 0.4, vy = (p.y - palmY) * 0.4;
+        for (let i = 0; i < 5; i++) spawnParticle(p.x, p.y, vx, vy, 1.3);
+      }
+    }
+    hs.extState = 'open';
+    hs.openHoldStart = now;
+    hs.lastPulseAt = 0;
+  } else if (hs.extState === 'fist' && ratio > 1.4) {
+    hs.extState = 'neutral';
+  } else if (hs.extState === 'open' && ratio < 1.6) {
+    hs.extState = 'neutral';
+    hs.openHoldStart = null;
+  }
+
+  // sustained open palm -> periodic shield pulse
+  if (hs.extState === 'open' && hs.openHoldStart && (now - hs.openHoldStart) > 250) {
+    if (!hs.lastPulseAt || now - hs.lastPulseAt > OPEN_PALM_PULSE_MS) {
+      spawnShockwave(palmX, palmY, Math.max(60, handSpan * 1.1), 650, [140, 100, 255], 2.2);
+      hs.lastPulseAt = now;
+    }
+  }
+}
+
+// ---------- Two-hand clap -> explosion ----------
+const twoHandDistHistory = [];
+let lastClapTime = 0;
+const CLAP_COOLDOWN_MS = 1400;
+
+function checkClapGesture(activeKeys, handsState) {
+  if (activeKeys.length < 2) { twoHandDistHistory.length = 0; return; }
+  const a = handsState[activeKeys[0]], b = handsState[activeKeys[1]];
+  if (!a || !b) return;
+  const aw = a.smoothed[0], amb = a.smoothed[9];
+  const bw = b.smoothed[0], bmb = b.smoothed[9];
+  const aPalm = { x: (aw.x + amb.x) / 2, y: (aw.y + amb.y) / 2 };
+  const bPalm = { x: (bw.x + bmb.x) / 2, y: (bw.y + bmb.y) / 2 };
+  const avgSpan = (dist(aw, amb) + dist(bw, bmb)) / 2;
+  const d = dist(aPalm, bPalm);
+  const now = performance.now();
+
+  twoHandDistHistory.push({ d, t: now });
+  while (twoHandDistHistory.length && now - twoHandDistHistory[0].t > 650) twoHandDistHistory.shift();
+
+  const closeThreshold = Math.max(55, avgSpan * 0.9);
+  const farThreshold = closeThreshold * 2.4;
+  const maxRecentDist = Math.max(...twoHandDistHistory.map(p => p.d));
+
+  if (d < closeThreshold && maxRecentDist > farThreshold && now - lastClapTime > CLAP_COOLDOWN_MS) {
+    lastClapTime = now;
+    const mx = (aPalm.x + bPalm.x) / 2, my = (aPalm.y + bPalm.y) / 2;
+    triggerClapExplosion(mx, my);
+    twoHandDistHistory.length = 0;
+  }
+}
+
+function triggerClapExplosion(x, y) {
+  shakeIntensity = 16;
+  flashOpacity = 1;
+  spawnShockwave(x, y, 260, 700, [255, 210, 130], 5);
+  spawnShockwave(x, y, 200, 550, [180, 130, 255], 3.5);
+  spawnBurst(x, y, 130, 3.2);
+  spawnBurst(x, y, 70, 2.0);
 }
 
 // ---------- Render loop (runs at display refresh rate, independent of inference rate) ----------
@@ -380,11 +513,19 @@ function renderLoop() {
 
   ctx.clearRect(0, 0, W, H);
 
+  updateScreenImpact(dtScale);
+  ctx.save();
+  if (shakeIntensity > 0.05) {
+    ctx.translate(rand(-shakeIntensity, shakeIntensity), rand(-shakeIntensity, shakeIntensity));
+  }
+
   let anyActive = false;
+  const activeKeys = [];
   for (const key of Object.keys(handsState)) {
     const hs = handsState[key];
     if (now - hs.lastSeen > 450) { delete handsState[key]; continue; }
     anyActive = true;
+    activeKeys.push(key);
 
     const smoothAlpha = 1 - Math.pow(0.001, dt / 1000) * 0; // placeholder, real alpha below
     const alpha = Math.min(1, dtScale * 0.35);
@@ -403,6 +544,7 @@ function renderLoop() {
     drawSigil(palmX, palmY, Math.max(50, handSpan * 1.6), hs.rotation, 0.24, { color: [255, 170, 80] });
 
     trackCastGesture(key, palmX, palmY, handSpan);
+    updateHandGestureState(hs, lm, wrist, palmX, palmY, handSpan);
 
     if (!hs.lastTip) hs.lastTip = {};
     FINGER_TIPS.forEach((tipIdx) => {
@@ -429,13 +571,16 @@ function renderLoop() {
     }
   }
 
-  if (!anyActive && statusLive === true) {
-    // keep last "tracking" label steady briefly, then mark lost
-  }
+  checkClapGesture(activeKeys, handsState);
+
   if (!anyActive) setStatus('hand not detected', false);
 
   updateAndDrawParticles(dtScale);
   updateAndDrawFlashes();
+  updateAndDrawShockwaves();
+  drawImpactFlash();
+
+  ctx.restore();
 
   requestAnimationFrame(renderLoop);
 }
