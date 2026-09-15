@@ -86,10 +86,10 @@
     </div>
     <div class="status" id="status"><span class="dot"></span>awaiting camera</div>
   </header>
-  <footer>pinch to ignite · circle to cast · hold palm open for a shield · snap a fist open for a blast · clap for an explosion</footer>
+  <footer>pinch to ignite · circle to cast · palm open for a shield · fist-snap for a blast · clap for an explosion · thumb+middle snap for a flashbang</footer>
   <div id="overlay">
     <h1>Conjure light with your hands</h1>
-    <p>Grant camera access and the sanctum will trace your fingertips, wreathing them in ember threads. Five gestures work here: <b>pinch</b> to ignite, <b>trace a circle</b> to cast a sigil, <b>hold your palm open</b> to pulse a shield, <b>snap a fist open</b> to release a blast, and <b>clap both hands</b> for a full explosion.</p>
+    <p>Grant camera access and the sanctum will trace your fingertips, wreathing them in ember threads. Gestures: <b>pinch</b> to ignite, <b>trace a circle</b> to cast a sigil, <b>hold your palm open</b> for a shield, <b>snap a fist open</b> for a blast, <b>clap both hands</b> for an explosion, and <b>snap your thumb and middle finger</b> for a flashbang.</p>
     <button id="startBtn">Open the Portal</button>
     <div class="error-box" id="errorBox"></div>
     <div class="hint">Video runs entirely in your browser. Nothing is recorded or sent anywhere.</div>
@@ -363,17 +363,24 @@ function updateAndDrawShockwaves() {
   ctx.globalCompositeOperation = 'source-over';
 }
 
-// screen-wide impact feedback for big moments (clap explosion)
+// screen-wide impact feedback for big moments (clap explosion, snap flashbang)
 let shakeIntensity = 0;
 let flashOpacity = 0;
+let flashBangOpacity = 0;
 function updateScreenImpact(dtScale) {
   shakeIntensity = Math.max(0, shakeIntensity - 0.9 * dtScale);
   flashOpacity = Math.max(0, flashOpacity - 0.06 * dtScale);
+  flashBangOpacity = Math.max(0, flashBangOpacity - 0.1 * dtScale);
 }
 function drawImpactFlash() {
   if (flashOpacity <= 0) return;
   ctx.fillStyle = `rgba(255,225,180,${flashOpacity * 0.5})`;
   ctx.fillRect(0, 0, W, H);
+}
+function drawFlashBang() {
+  if (flashBangOpacity <= 0) return;
+  ctx.fillStyle = `rgba(255,255,255,${flashBangOpacity})`;
+  ctx.fillRect(-40, -40, W + 80, H + 80);
 }
 
 // ---------- Hand tracking (inference) decoupled from rendering ----------
@@ -506,6 +513,37 @@ function triggerClapExplosion(x, y) {
   spawnBurst(x, y, 70, 2.0);
 }
 
+// ---------- Snap gesture (thumb + middle finger) -> flashbang ----------
+function triggerFlashBang(x, y) {
+  flashBangOpacity = 1;
+  shakeIntensity = Math.max(shakeIntensity, 11);
+  spawnShockwave(x, y, 220, 380, [255, 255, 255], 6);
+  spawnBurst(x, y, 70, 2.4);
+}
+
+function updateSnapGesture(hs, lm, handSpan) {
+  const now = performance.now();
+  const thumbTip = lm[4], middleTip = lm[12];
+  const d = dist(thumbTip, middleTip) / Math.max(1, handSpan);
+
+  if (!hs.snapState) hs.snapState = 'apart';
+
+  if (d < 0.22) {
+    if (hs.snapState !== 'close') {
+      hs.snapState = 'close';
+      hs.snapCloseAt = now;
+    }
+  } else if (d > 0.5) {
+    if (hs.snapState === 'close' && now - hs.snapCloseAt < 450) {
+      const mx = (thumbTip.x + middleTip.x) / 2, my = (thumbTip.y + middleTip.y) / 2;
+      triggerFlashBang(mx, my);
+    }
+    hs.snapState = 'apart';
+  }
+  // safety reset so a hand held mid-pinch doesn't get stuck
+  if (hs.snapState === 'close' && now - hs.snapCloseAt > 900) hs.snapState = 'apart';
+}
+
 // ---------- Ambient light glow (makes the hand feel like a real light source) ----------
 function drawAmbientGlow(x, y, radius, intensity) {
   if (intensity <= 0.01) return;
@@ -568,6 +606,7 @@ function renderLoop() {
 
     trackCastGesture(key, palmX, palmY, handSpan);
     updateHandGestureState(hs, lm, wrist, palmX, palmY, handSpan);
+    updateSnapGesture(hs, lm, handSpan);
 
     if (!hs.lastTip) hs.lastTip = {};
     FINGER_TIPS.forEach((tipIdx) => {
@@ -604,6 +643,7 @@ function renderLoop() {
   updateAndDrawFlashes();
   updateAndDrawShockwaves();
   drawImpactFlash();
+  drawFlashBang();
 
   ctx.restore();
 
