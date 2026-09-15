@@ -370,7 +370,7 @@ let flashBangOpacity = 0;
 function updateScreenImpact(dtScale) {
   shakeIntensity = Math.max(0, shakeIntensity - 0.9 * dtScale);
   flashOpacity = Math.max(0, flashOpacity - 0.06 * dtScale);
-  flashBangOpacity = Math.max(0, flashBangOpacity - 0.1 * dtScale);
+  flashBangOpacity = Math.max(0, flashBangOpacity - 0.055 * dtScale);
 }
 function drawImpactFlash() {
   if (flashOpacity <= 0) return;
@@ -379,8 +379,11 @@ function drawImpactFlash() {
 }
 function drawFlashBang() {
   if (flashBangOpacity <= 0) return;
-  ctx.fillStyle = `rgba(255,255,255,${flashBangOpacity})`;
-  ctx.fillRect(-40, -40, W + 80, H + 80);
+  // holds a solid, fully opaque white plateau, then tails off quickly —
+  // reads as a real whiteout instead of a faint translucent wash
+  const alpha = Math.min(1, flashBangOpacity * 2.2);
+  ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+  ctx.fillRect(-60, -60, W + 120, H + 120);
 }
 
 // ---------- Hand tracking (inference) decoupled from rendering ----------
@@ -643,9 +646,10 @@ function renderLoop() {
   updateAndDrawFlashes();
   updateAndDrawShockwaves();
   drawImpactFlash();
-  drawFlashBang();
 
   ctx.restore();
+
+  drawFlashBang();
 
   requestAnimationFrame(renderLoop);
 }
